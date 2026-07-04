@@ -1,6 +1,7 @@
 const express = require('express');
 const app = express();
 const mongoose = require('mongoose');
+const path = require('node:path');
 
 const Country = require('./models/Country'); // import country
 const Breeder = require('./models/Breeder'); // import breeder
@@ -25,7 +26,11 @@ app.post('/addCountry', async (req,res)=>{
 
     res.status(201).json({message: `Dodano kraj: ${name} o kodzie: ${code}`});
 
-   }catch(err){
+   }catch(err){ //sprawdzic czy dziala
+        if(err.code === 11000){
+            return res.status(409).json({error: "Kraj o podanych danych już istnieje w bazie!"})
+        }
+
         res.status(500).json({error: err.message});
    }
 });
@@ -33,25 +38,25 @@ app.post('/addCountry', async (req,res)=>{
 app.post('/addBreeder', async (req,res)=>{
    
    try{
-    const {name, breederCode, notes} = req.body;
+    const {name, codeDoc, notes} = req.body;
 
-    const countryCode = await Country.findOne({code: breederCode}); // czy wogole takie ISO istnieje w bazie 
+    const country = await Country.findOne({code: codeDoc}); // czy wogole takie ISO istnieje w bazie zwraca caly obiekt!!!
 
-    if(!countryCode){
+    if(!country){
         return res.status(404).json({error: "nie znaleziono kraju(ISO)"});
     }
 
 
     const breeder = new Breeder({
         name,
-        countryCode: countryCode._id,
+        country: country._id,
         notes
     });
 
     await breeder.save();
 
 
-    res.status(201).json({message: `Dodano hodowce: ${name} o kodzie kraju: ${breederCode} oraz o notatkach: ${notes}`});
+    res.status(201).json({message: `Dodano hodowce: ${name} o kodzie kraju: ${codeDoc} oraz o notatkach: ${notes}`});
 
    }catch(err){
         res.status(500).json({error: err.message});
@@ -104,10 +109,11 @@ app.post('/addHorse', async (req,res)=>{
 
 });
 
+app.use(express.static(__dirname)); // chwilowe i na sile
 
 app.get('/', (req,res)=>{
 
-    res.send("Hello world klient"); 
+    res.redirect("/dashboard.html");
     console.log("Hello World");
 
 });

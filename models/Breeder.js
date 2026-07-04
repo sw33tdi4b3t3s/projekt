@@ -5,10 +5,9 @@ const breederSchema = new mongoose.Schema({
         type: String,
         required: true,
         trim: true,
-        unique: true
     },
 
-    countryCode:{
+    country:{
         type: mongoose.Schema.Types.ObjectId,
         ref: "Country",
         required: true
@@ -20,6 +19,9 @@ const breederSchema = new mongoose.Schema({
 
 })
 
+breederSchema.index({name:1, country:1},{unique: true});//rosnaco (buduje unikalny index)
+
 const Breeder = mongoose.model("Breeder",breederSchema);
 
 module.exports = Breeder;
+

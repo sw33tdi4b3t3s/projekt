@@ -5,3 +5,8 @@ curl -X POST http://localhost:3000/addBreeder -H "Content-Type: application/json
 curl -X POST http://localhost:3000/addHorse -H "Content-Type: application/json" -d "{\"name\": \"Aron\",\"birthYear\": 2020, \"gender\": \"ogier\", \"color\": \"gniada\", \"countryCode\": \"PL\", \"breeder\": \"6a3e9365824dad9244efe092\", \"notes\": \"pierwszy koń\" }"
 
 zastanowic sie czy te kody iso na innych modelach nie ujednolicic
+
+
+dodac unique key dla konia oraz hodowcy
+
+presave porobic!!!!! (zwalidowalem konia presave)
