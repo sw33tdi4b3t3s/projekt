@@ -14,19 +14,24 @@ app.use(express.json());
 app.post('/addCountry', async (req,res)=>{
    
    try{
-    const {name, code} = req.body;
+        const {name, code} = req.body;
 
-    const country = new Country({
-        name,
-        code
-    });
-
-    await country.save();
+        if(!name || !code){
+            return res.status(400).json({error: `pola name oraz code są wymagane! -> name: ${name}, code: ${code}`});
+        }
 
 
-    res.status(201).json({message: `Dodano kraj: ${name} o kodzie: ${code}`});
+        const country = new Country({
+            name,
+            code
+        });
 
-   }catch(err){ //sprawdzic czy dziala
+        await country.save();
+
+
+        res.status(201).json({message: `Dodano kraj: ${name} o kodzie: ${code}`});
+
+   }catch(err){ 
         if(err.code === 11000){
             return res.status(409).json({error: "Kraj o podanych danych już istnieje w bazie!"})
         }
@@ -38,28 +43,35 @@ app.post('/addCountry', async (req,res)=>{
 app.post('/addBreeder', async (req,res)=>{
    
    try{
-    const {name, codeDoc, notes} = req.body;
+        const {name, countryCode, notes} = req.body;
 
-    const country = await Country.findOne({code: codeDoc}); // czy wogole takie ISO istnieje w bazie zwraca caly obiekt!!!
+        if(!name || !countryCode){
+            return res.status(400).json({error: `pola name oraz countryCode są wymagane! -> name: ${name}, countryCode: ${countryCode}`});
+        }
 
-    if(!country){
-        return res.status(404).json({error: "nie znaleziono kraju(ISO)"});
-    }
+        const country = await Country.findOne({code: countryCode.toUpperCase()}); // czy wogole takie ISO istnieje w bazie zwraca caly obiekt!!!
 
-
-    const breeder = new Breeder({
-        name,
-        country: country._id,
-        notes
-    });
-
-    await breeder.save();
+        if(!country){
+            return res.status(404).json({error: `nie znaleziono kraju(ISO): ${countryCode}`});
+        }
 
 
-    res.status(201).json({message: `Dodano hodowce: ${name} o kodzie kraju: ${codeDoc} oraz o notatkach: ${notes}`});
+        const breeder = new Breeder({
+            name,
+            country: country._id,
+            notes
+        });
+
+
+        await breeder.save();
+        res.status(201).json({message: `Dodano hodowce: ${name} o kodzie kraju: ${codeDoc} oraz o notatkach: ${notes}`});
 
    }catch(err){
-        res.status(500).json({error: err.message});
+        if(err.code === 11000){
+            res.status(409).json({error: `Hodowca o podanych danych już istnieje!`});
+        }else{
+            res.status(500).json({error: err.message});
+        }
    }
 });
 
@@ -68,7 +80,11 @@ app.post('/addHorse', async (req,res)=>{
     try{
         const {name, birthYear, gender, color, countryCode, father, mother, breeder, notes} = req.body;
         
-        const country = await Country.findOne({code: countryCode}); // czy wogole takie ISO istnieje w bazie 
+        if(!name || !birthYear || !gender || !color || !countryCode || !breeder){
+            res.status(400).json({error: "pola wymagane: name, birthYear, gender, color, countryCode, breeder"})
+        }
+
+        const country = await Country.findOne({code: countryCode.toUpperCase()}); // czy wogole takie ISO istnieje w bazie 
 
         if(!country){
             return res.status(404).json({error: "nie znaleziono kraju(ISO)"});

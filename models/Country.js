@@ -17,9 +17,7 @@ const countrySchema = new mongoose.Schema({
         trim: true,
         unique: true
     },
-})
-
-countrySchema.index({code:1},{unique: true});//rosnaco (buduje unikalny index)
+});
 
 const Country = mongoose.model("Country",countrySchema);
 
