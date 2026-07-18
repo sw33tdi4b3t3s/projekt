@@ -15,3 +15,5 @@ curl -X POST http://localhost:3000/api/horses/add -H "Content-Type: application/
 
 wprowadzenie centralnego routera(index.js) oraz przeniesienie endpointow do odpowiednich plikow
 dodanie rowniez podzialu w routes na folder api oraz views
+
+dorobic restowe api dla pozostalych routesow (breeders, countries)!!
