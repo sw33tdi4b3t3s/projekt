@@ -1,7 +1,8 @@
-curl -X POST http://localhost:3000/addCountry -H "Content-Type: application/json" -d "{\"name\":\"Polska\",\"code\":\"PL\"}"
+curl -X POST http://localhost:3000/api/countries/add -H "Content-Type: application/json" -d "{\"name\":\"Polska\",\"code\":\"PL\"}"
 
-curl -X POST http://localhost:3000/addBreeder -H "Content-Type: application/json" -d "{\"name\":\"Zbigniew DomskI\",\"countryCode\":\"PL\"}"
+curl -X POST http://localhost:3000/api/breeders/add -H "Content-Type: application/json" -d "{\"name\":\"Zbigniew DomskI\",\"countryCode\":\"FR\"}"
 
-curl -X POST http://localhost:3000/addHorse -H "Content-Type: application/json" -d "{\"name\": \"Aron\",\"birthYear\": 2020, \"gender\": \"ogier\", \"color\": \"gniada\", \"countryCode\": \"PL\", \"breeder\": \"6a3e9365824dad9244efe092\", \"notes\": \"pierwszy koń\" }"
+curl -X POST http://localhost:3000/api/horses/add -H "Content-Type: application/json" -d "{\"name\": \"Aron\",\"birthYear\": 2020, \"gender\": \"ogier\", \"color\": \"gniada\", \"countryCode\": \"PL\", \"breeder\": \"6a52661397664a487ba21ead\", \"notes\": \"pierwszy koń\" }" 
 
-zasiewanie problem wieku rodowodu obecnie waliduje wiek konia do 35 lat ale rodowod juz moze nie zyc 
+
+wprowadzenie centralnego routera(index.js) oraz przeniesienie endpointow do odpowiednich plikow

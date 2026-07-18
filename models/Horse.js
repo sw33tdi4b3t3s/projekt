@@ -58,28 +58,28 @@ const horseSchema = new mongoose.Schema({
 
 horseSchema.index({name:1, country:1, birthYear:1},{unique: true});//rosnaco (buduje unikalny index)
 
-horseSchema.pre("save",async function(next){
+horseSchema.pre("save",async function(){
     const currentYear = new Date().getFullYear();
 
     if(currentYear - this.birthYear < 0 || this.birthYear > currentYear){
-        return next(new Error(`Podany wiek konia musi być > 0 oraz nie moze byc koniem z przyszlosci, podano: ${this.birthYear}`));
+        return (new Error(`Podany wiek konia musi być > 0 oraz nie moze byc koniem z przyszlosci, podano: ${this.birthYear}`));
     }
 
     if(this.father){
         const horseFather = await mongoose.model("Horse").findById(this.father);
 
         if(!horseFather){
-            return next(new Error(`Podany ojciec nie istnieje w bazie!`));
+            return (new Error(`Podany ojciec nie istnieje w bazie!`));
         }
 
         if(horseFather.gender !== "ogier"){
-            return next(new Error(`Podany ojciec musi być ogierem!`));
+            return (new Error(`Podany ojciec musi być ogierem!`));
         }
 
         const fatherAge = this.birthYear - horseFather.birthYear;
 
         if(fatherAge < 3 || fatherAge > 21){
-            return next(new Error(`Wiek ojca musi być z przedziału [3,21], podano: ${fatherAge}`));
+            return (new Error(`Wiek ojca musi być z przedziału [3,21], podano: ${fatherAge}`));
         }
 
     }
@@ -89,23 +89,20 @@ horseSchema.pre("save",async function(next){
 
 
         if(!horseMother){
-            return next(new Error(`Podana matka nie istnieje w bazie!`));
+            return (new Error(`Podana matka nie istnieje w bazie!`));
         }
 
         if(horseMother.gender !== "klacz"){
-            return next(new Error(`Podana matka musi być klaczą!`));
+            return (new Error(`Podana matka musi być klaczą!`));
         }
 
         const motherAge = this.birthYear - horseMother.birthYear;
 
         if(motherAge < 3 || motherAge > 21){
-            return next(new Error(`Wiek matki musi być z przedziału [3,21], podano: ${motherAge}`));
+            return (new Error(`Wiek matki musi być z przedziału [3,21], podano: ${motherAge}`));
         }
 
     }
-
-
-    next();
 });
 
 const Horse = mongoose.model("Horse",horseSchema);
