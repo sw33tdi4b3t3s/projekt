@@ -51,5 +51,92 @@ router.get('/all', async (req,res)=>{
 
 });
 
+router.route('/:value')
+    .get(async (req,res)=>{
+        try{
+          const {value} = req.params;
+          
+          if(!value){
+            return res.status(400).json({error: `wymagany parametr wyszukiwania to name lub ISO_kraju ! Podano: ${value}`});
+          }
+
+          const breeder = await Breeder.findOne(buildQuery(value));
+
+          if(!breeder){
+            return res.status(404).json({error: `hodowca o podanych parametrach -> parametr: ${value} nie istnieje w bazie ` });
+          }
+
+          res.status(200).json(breeder);
+
+        }catch(err){
+            res.status(500).json({error: err.message});
+        }
+
+    })
+
+    .delete(async (req,res)=>{
+        try{
+            const {value} = req.params;
+
+            if(!value){
+                return res.status(400).json({error: `wymagany parametr do usuniecia to name lub ISO_kraju! Podano: ${value}`});
+            }
+
+            const result = await Breeder.deleteOne(buildQuery(value));
+
+            if(result.deletedCount === 0){
+                return res.status(404).json({error: `hodowca o podanych parametrach -> parametr: ${value} nie istnieje w bazie! `});
+            }
+
+            res.status(200).json({message: `pomyślnie usunięto z bazy hodowce o parametrze: ${value}`});
+
+        }catch(err){
+            res.status(500).json({error: err.message});
+        }
+
+    })
+
+    .patch(async (req,res)=>{
+        try{
+
+            const {value} = req.params; 
+            const {name,country, notes} = req.body;
+
+            if(!value){
+                return res.status(400).json({error: `wymagany minimum 1 parametr do update'a to name lub ISO_kraju! Podano: ${value}`});
+            }
+
+            if(!name && !country && !notes){
+                return res.status(400).json({error: `Wymagany parametr do update to name, ISO_kraju lub notes!`});
+            }
+
+            const updateData = {};
+            if(name){ updateData.name = name;}
+            if(country){updateData.country = country.toUpperCase();}
+            if(notes){updateData.notes = notes;}
+
+            const result = await Breeder.updateOne(buildQuery(value),updateData);
+
+            if(result.matchedCount === 0){
+                return res.status(404).json({error: `brak danego hodowcy w bazie Podano: ${value}`});
+            }
+
+            res.status(200).json({message: `pomyslnie dokonano zmian w hodowcy o parametrze: ${value}`});
+
+        }catch(err){
+            res.status(500).json({error: err.message});
+        }
+
+
+    } )
+
+
+function buildQuery(value){
+    if(value.length >= 0 && value.length <=2){
+        return {country: value.toUpperCase() };
+    }else{
+        return {name: {$regex: value, $options: 'i'}};
+    }
+}
 
 module.exports = router;

@@ -17,3 +17,5 @@ wprowadzenie centralnego routera(index.js) oraz przeniesienie endpointow do odpo
 dodanie rowniez podzialu w routes na folder api oraz views
 
 dorobic restowe api dla pozostalych routesow (breeders, countries)!!
+
+zwalidowac wyszukiwanie or!
