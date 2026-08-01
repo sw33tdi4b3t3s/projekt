@@ -5,14 +5,14 @@ const Breeder = require('../../models/Breeder');
 
 router.post('/add', async (req,res)=>{
    
-   try{
+    try{
         const {name, countryCode, notes} = req.body;
 
         if(!name || !countryCode){
             return res.status(400).json({error: `pola name oraz countryCode są wymagane! -> name: ${name}, countryCode: ${countryCode}`});
         }
 
-        const country = await Country.findOne({code: countryCode.toUpperCase()}); // czy wogole takie ISO istnieje w bazie zwraca caly obiekt!!!
+        const country = await Country.findOne({code: countryCode.toUpperCase()}); 
 
         if(!country){
             return res.status(404).json({error: `nie znaleziono kraju(ISO): ${countryCode}`});
@@ -20,7 +20,7 @@ router.post('/add', async (req,res)=>{
 
 
         const breeder = new Breeder({
-            name,
+            name: name.trim(),
             country: country._id,
             notes
         });
@@ -39,31 +39,31 @@ router.post('/add', async (req,res)=>{
 });
 
 router.get('/all', async (req,res)=>{
-
+    
     try{
-        const breeders = await Breeder.find();
-
+        const breeders = await Breeder.find().populate('country');
         res.status(200).json(breeders);
-
+    
     }catch(err){
         res.status(500).json({error: err.message});
     }
 
 });
 
-router.route('/:value')
+router.route('/:name/:country')
     .get(async (req,res)=>{
         try{
-          const {value} = req.params;
-          
-          if(!value){
-            return res.status(400).json({error: `wymagany parametr wyszukiwania to name lub ISO_kraju ! Podano: ${value}`});
+          const {name, country} = req.params;
+          const query = await buildQuery(name, country);
+
+          if(!query){
+            return res.status(400).json({error: `nie znaleziono kraju w bazie dla parametru: ${country}`});
           }
 
-          const breeder = await Breeder.findOne(buildQuery(value));
+          const breeder = await Breeder.findOne(query).populate('country');
 
           if(!breeder){
-            return res.status(404).json({error: `hodowca o podanych parametrach -> parametr: ${value} nie istnieje w bazie ` });
+            return res.status(404).json({error: `Hodowca ${name} w kraju ${country} nie istnieje w bazie ` });
           }
 
           res.status(200).json(breeder);
@@ -71,24 +71,24 @@ router.route('/:value')
         }catch(err){
             res.status(500).json({error: err.message});
         }
-
     })
 
     .delete(async (req,res)=>{
         try{
-            const {value} = req.params;
+            const {name,country} = req.params;
+            const query = await buildQuery(name,country);
 
-            if(!value){
-                return res.status(400).json({error: `wymagany parametr do usuniecia to name lub ISO_kraju! Podano: ${value}`});
+            if(!query){
+            return res.status(400).json({error: `nie znaleziono kraju w bazie dla parametru: ${country}`});
             }
 
-            const result = await Breeder.deleteOne(buildQuery(value));
+            const result = await Breeder.deleteOne(query);
 
             if(result.deletedCount === 0){
-                return res.status(404).json({error: `hodowca o podanych parametrach -> parametr: ${value} nie istnieje w bazie! `});
+                return res.status(404).json({error: `Hodowca ${name} z kraju ${country} nie istnieje w bazie! `});
             }
 
-            res.status(200).json({message: `pomyślnie usunięto z bazy hodowce o parametrze: ${value}`});
+            res.status(200).json({message: `pomyślnie usunięto hodowce: ${name}, ${country}`});
 
         }catch(err){
             res.status(500).json({error: err.message});
@@ -98,45 +98,79 @@ router.route('/:value')
 
     .patch(async (req,res)=>{
         try{
+            const {name: paramName, country: paramCountry} = req.params; 
+            const {name, country, notes} = req.body;
 
-            const {value} = req.params; 
-            const {name,country, notes} = req.body;
+            const query = await buildQuery(paramName, paramCountry);
 
-            if(!value){
-                return res.status(400).json({error: `wymagany minimum 1 parametr do update'a to name lub ISO_kraju! Podano: ${value}`});
+            if(!query){
+                return res.status(404).json({error: `nie znaleziono hodowcy w bazie dla parametru: ${paramCountry}`})
             }
 
-            if(!name && !country && !notes){
-                return res.status(400).json({error: `Wymagany parametr do update to name, ISO_kraju lub notes!`});
+            // poprzed undefined pozwalamy na wyczysczenie notatek ""
+            if(!name && !country && notes === undefined){
+                return res.status(400).json({error: `Wymagany parametr do update to name, country lub notes!`});
             }
-
+            
             const updateData = {};
-            if(name){ updateData.name = name;}
-            if(country){updateData.country = country.toUpperCase();}
-            if(notes){updateData.notes = notes;}
+            if(name){ updateData.name = name.trim(); }
+            if(notes !== undefined){ updateData.notes = notes; }
 
-            const result = await Breeder.updateOne(buildQuery(value),updateData);
+            if(country){
+                const safeNewCountry = escapeRegex(country);
+                const newCountry = await Country.findOne({
+                    $or: [
+                        { code: country.toUpperCase() },
+                        { name: { $regex: safeNewCountry, $options: 'i' } }
+                    ]
+                });
+
+                if (!newCountry) {
+                    return res.status(404).json({ error: `Podany nowy kod kraju (${country}) nie istnieje!` });
+                }
+                updateData.country = newCountry._id;
+            }
+
+            const result = await Breeder.updateOne(query,updateData);
 
             if(result.matchedCount === 0){
-                return res.status(404).json({error: `brak danego hodowcy w bazie Podano: ${value}`});
+                return res.status(404).json({error: `brak danego hodowcy w bazie`});
             }
 
-            res.status(200).json({message: `pomyslnie dokonano zmian w hodowcy o parametrze: ${value}`});
+            res.status(200).json({message: `pomyslnie dokonano zmian w hodowcy`});
 
         }catch(err){
+            if(err.code === 11000){
+                return res.status(409).json({error: `Hodowca o takiej nazwie i kraju juz istnieje w bazie!`});
+            }
             res.status(500).json({error: err.message});
         }
+    });
 
+// wyszukuje mozliwy znak w zapytaniu i przed nim wstawi \ , przyklad: Jan Kowalski \(fajny\)
+function escapeRegex(text) {
+    return text.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&');
+}
 
-    } )
+async function buildQuery(name, countryParam){
+    if(!name || !countryParam) return null;
 
+    const safeCountry = escapeRegex(countryParam);
+    const safeName = escapeRegex(name);
 
-function buildQuery(value){
-    if(value.length >= 0 && value.length <=2){
-        return {country: value.toUpperCase() };
-    }else{
-        return {name: {$regex: value, $options: 'i'}};
-    }
+    const country = await Country.findOne({
+        $or: [
+            {code: countryParam.toUpperCase()},
+            {name: {$regex: safeCountry, $options: 'i'}}
+        ]
+    });
+
+    if(!country) return null;
+
+    return {
+        name: {$regex: safeName, $options: 'i'},
+        country: country._id
+    };
 }
 
 module.exports = router;

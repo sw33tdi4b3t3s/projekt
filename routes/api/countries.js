@@ -13,14 +13,14 @@ router.post('/add', async (req,res)=>{
 
 
         const country = new Country({
-            name,
-            code
+            name: name.trim(),
+            code: code.toUpperCase().trim()
         });
 
         await country.save();
 
 
-        res.status(201).json({message: `Dodano kraj: ${name} o kodzie: ${code}`});
+        res.status(201).json({message: `Dodano kraj: ${name} o kodzie: ${code.toUpperCase()}`});
 
    }catch(err){ 
         if(err.code === 11000){
@@ -102,7 +102,7 @@ router.route('/:value')
             }
 
             const updateData = {};
-            if(name){ updateData.name = name;}
+            if(name){ updateData.name = name.trim();}
             if(code){updateData.code = code.toUpperCase();}
 
 
@@ -124,12 +124,17 @@ router.route('/:value')
     })
 
 
+function escapeRegex(text) {
+    return text.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&');
+}
+
 function buildQuery(value){
+    const safeValue = escapeRegex(value);
     return {
-        $or: [ //jesli code nic nie zwroci to przechodzimy do drugiego warunku
-                {code: value.toUpperCase() },
-                {name: {$regex: value, $options: 'i'}} // pozwalam na dowolna wielkosc znakow
-            ]
+        $or: [
+            { code: value.toUpperCase() },
+            { name: { $regex: safeValue, $options: 'i' } }
+        ]
     };
 }
 
