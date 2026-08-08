@@ -13,9 +13,11 @@ HORSE#################################
 curl -X POST http://localhost:3000/api/horses/add -H "Content-Type: application/json" -d "{\"name\": \"Aron\",\"birthYear\": 2020, \"gender\": \"ogier\", \"color\": \"gniada\", \"countryCode\": \"PL\", \"breeder\": \"6a52661397664a487ba21ead\", \"notes\": \"pierwszy koń\" }" 
 ######################################
 
-wprowadzenie centralnego routera(index.js) oraz przeniesienie endpointow do odpowiednich plikow
-dodanie rowniez podzialu w routes na folder api oraz views
-
-dorobic restowe api dla pozostalych routesow (breeders, countries)!!
 
 zwalidowac wyszukiwanie or!
+
+sprawdzic dla horses zapytania z krajem konia/hodowcy/rodzicow
+
+wyciagnac do pliku funkcje ze wszystkich plikow ?
+
+szukac po unikalnym indeksie nie kompletnym typu tylko po name dla konia

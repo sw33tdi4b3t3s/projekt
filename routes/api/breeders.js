@@ -152,23 +152,18 @@ function escapeRegex(text) {
     return text.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&');
 }
 
-async function buildQuery(name, countryParam){
-    if(!name || !countryParam) return null;
+async function buildQuery(name, countryCodeParam) {
+    if (!name || !countryCodeParam) return null;
 
-    const safeCountry = escapeRegex(countryParam);
-    const safeName = escapeRegex(name);
 
-    const country = await Country.findOne({
-        $or: [
-            {code: countryParam.toUpperCase()},
-            {name: {$regex: safeCountry, $options: 'i'}}
-        ]
+    const country = await Country.findOne({ 
+        code: countryCodeParam.trim().toUpperCase() 
     });
 
-    if(!country) return null;
+    if (!country) return null;
 
     return {
-        name: {$regex: safeName, $options: 'i'},
+        name: name.trim(),
         country: country._id
     };
 }
