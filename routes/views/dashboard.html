@@ -6,116 +6,28 @@
 </head>
 <body>
 
-<h1>DASHBOARD</h1>
+    <h1>DASHBOARD</h1>
 
-<hr>
 
-<!-- 1. CREATE (DODAWANIE) -->
-<h2>1. DODAJ KRAJ</h2>
-<form id="addCountryForm">
-    <input type="text" id="addName" placeholder="Nazwa kraju (np. Polska)" required>
-    <input type="text" id="addCode" placeholder="Kod ISO (np. PL)" required>
-    <button type="submit">Dodaj kraj</button>
-</form>
+    <div class="countries">
+        <h2>LISTA KRAJOW</h2>
+        <input type="button" id="countryListButton" value="Pokaz liste krajow"/>
+        <ul id="countriesList"></ul>
 
-<hr>
+        <h2>DODAJ KRAJ/ZNAJDZ KRAJ</h2>
+        <input id="countryName" placeholder="nazwa kraju">
+        <input id="countryCode" placeholder="ISO kraju">
+        <input id="countryAddButton" type="button" value="dodaj kraj">
+        <input id="countryFindButton" type="button" value="znajdz kraj">
+        <input id="countryDeleteButton" type="button" value="usun kraj">
+        <hr>
+        <input id="countryNewName" placeholder="nowa nazwa kraju">
+        <input id="countryNewCode" placeholder="nowe ISO KRAJU">
+        <input id="countryEditButton" type="button" value="zedytuj kraj">
+    </div>
 
-<!-- 2. READ (LISTA / WSZYSTKIE) -->
-<h2>2. LISTA KRAJÓW</h2>
-<button onclick="fetchCountries()">Pobierz / Odśwież listę</button>
-<ul id="countriesList">
-    <!-- Tu JavaScript wstawi pobrane kraje -->
-</ul>
+    
 
-<hr>
-
-<!-- 3. UPDATE (EDYCJA) -->
-<h2>3. EDYTUJ KRAJ</h2>
-<form id="updateCountryForm">
-    <input type="text" id="updateSearchValue" placeholder="Kod lub nazwa do edycji (np. PL)" required>
-    <input type="text" id="updateNewName" placeholder="Nowa nazwa (opcjonalnie)">
-    <input type="text" id="updateNewCode" placeholder="Nowy kod ISO (opcjonalnie)">
-    <button type="submit">Zapisz zmiany</button>
-</form>
-
-<hr>
-
-<!-- 4. DELETE (USUWANIE) -->
-<h2>4. USUŃ KRAJ</h2>
-<form id="deleteCountryForm">
-    <input type="text" id="deleteValue" placeholder="Kod lub nazwa do usunięcia (np. PL)" required>
-    <button type="submit">Usuń kraj</button>
-</form>
-
-<!-- PROSTY SCRIPT JS DO OBSŁUGI FETCH -->
-<script>
-    const API_URL = 'http://localhost:3000/api/countries';
-
-    // 1. CREATE (POST /add)
-    document.getElementById('addCountryForm').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const name = document.getElementById('addName').value;
-        const code = document.getElementById('addCode').value;
-
-        const res = await fetch(`${API_URL}/add`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ name, code })
-        });
-        const data = await res.json();
-        alert(data.message || data.error);
-        fetchCountries(); // odśwież listę
-    });
-
-    // 2. READ (GET /all)
-    async function fetchCountries() {
-        const res = await fetch(`${API_URL}/all`);
-        const countries = await res.json();
-        
-        const list = document.getElementById('countriesList');
-        list.innerHTML = '';
-        
-        countries.forEach(c => {
-            const li = document.createElement('li');
-            li.textContent = `${c.name} [${c.code}]`;
-            list.appendChild(li);
-        });
-    }
-
-    // 3. UPDATE (PATCH /:value)
-    document.getElementById('updateCountryForm').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const value = document.getElementById('updateSearchValue').value;
-        const name = document.getElementById('updateNewName').value;
-        const code = document.getElementById('updateNewCode').value;
-
-        const bodyData = {};
-        if (name) bodyData.name = name;
-        if (code) bodyData.code = code;
-
-        const res = await fetch(`${API_URL}/${value}`, {
-            method: 'PATCH',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(bodyData)
-        });
-        const data = await res.json();
-        alert(data.message || data.error);
-        fetchCountries();
-    });
-
-    // 4. DELETE (DELETE /:value)
-    document.getElementById('deleteCountryForm').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const value = document.getElementById('deleteValue').value;
-
-        const res = await fetch(`${API_URL}/${value}`, {
-            method: 'DELETE'
-        });
-        const data = await res.json();
-        alert(data.message || data.error);
-        fetchCountries();
-    });
-</script>
-
+    <script src="/dashboard.js"></script>
 </body>
 </html>

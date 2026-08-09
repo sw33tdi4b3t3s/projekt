@@ -20,4 +20,8 @@ sprawdzic dla horses zapytania z krajem konia/hodowcy/rodzicow
 
 wyciagnac do pliku funkcje ze wszystkich plikow ?
 
-szukac po unikalnym indeksie nie kompletnym typu tylko po name dla konia
+szukac po unikalnym indeksie nie kompletnym typu tylko po name dla konia!!!!!
+
+seedowanie danych do sprawdzenia byly zmiany
+
+dokonczyc robienie dla pozostalych api lacznika z frontem

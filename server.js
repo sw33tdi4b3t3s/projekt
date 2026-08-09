@@ -10,6 +10,7 @@ const views = require(path.join(__dirname, 'routes', 'views'));
 //require('dotenv').config();
 //const PORT = process.env.PORT || 9999;
 
+app.use(express.static(path.join(__dirname, 'public')));
 app.use('/api', api);
 app.use('/', views); //uzytkownik bedzie to widzial
 

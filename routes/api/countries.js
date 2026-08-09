@@ -106,7 +106,7 @@ router.route('/:value')
             if(code){updateData.code = code.toUpperCase();}
 
 
-            const result = await Country.updateOne(buildQuery(value),updateData);
+            const result = await Country.updateOne(buildQuery(value),updateData,{new:true, runValidators: true});
 
             if(result.matchedCount === 0){
                 return res.status(404).json({error: `brak danego kraju w bazie Podano: ${value}`});
