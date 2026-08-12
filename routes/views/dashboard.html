@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>Dashboard</title>
+    <script type="module" src="/dashboard.js"></script>
 </head>
 <body>
 
@@ -20,14 +21,33 @@
         <input id="countryAddButton" type="button" value="dodaj kraj">
         <input id="countryFindButton" type="button" value="znajdz kraj">
         <input id="countryDeleteButton" type="button" value="usun kraj">
-        <hr>
+        <br></br>
         <input id="countryNewName" placeholder="nowa nazwa kraju">
         <input id="countryNewCode" placeholder="nowe ISO KRAJU">
         <input id="countryEditButton" type="button" value="zedytuj kraj">
     </div>
 
-    
+    <hr>
 
-    <script src="/dashboard.js"></script>
+    <div class="breeders">
+        <h2>LISTA HODOWCOW</h2>
+        <input type="button" id="breederListButton" value="Pokaz liste hodowcow"/>
+        <ul id="breedersList"></ul>
+        
+        <h2>DODAJ HODOWCE/ZNAJDZ HODOWCE</h2>
+        <input id="breederName" placeholder="nazwa hodowcy">
+        <input id="breederCountry" placeholder="ISO kraju hodowcy">
+        <input id="breederNotes" placeholder="notatki hodowcy">
+        <input id="breederAddButton" type="button" value="dodaj hodowce">
+        <input id="breederFindButton" type="button" value="znajdz hodowce">
+        
+        <input id="breederDeleteButton" type="button" value="usun hodowce">
+        <br></br>
+        <input id="breederNewName" placeholder="nowa nazwa hodowcy">
+        <input id="breederNewCountry" placeholder="nowe ISO kraju hodowcy">
+        <input id="breederNewNotes" placeholder="nowe notatki hodowcy">
+        <input id="breederEditButton" type="button" value="zedytuj hodowce">
+    </div>
+
 </body>
 </html>
