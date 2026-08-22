@@ -1,9 +1,11 @@
+require('dotenv').config();
 const mongoose = require('mongoose');
 
 
 const connectDB = async () =>{
     try{
-        await mongoose.connect('mongodb://localhost:27017/KONIOWELOVEDB');
+        const dbPort = process.env.DB_PORT;
+        await mongoose.connect(`mongodb://localhost:${dbPort}/KONIOWELOVEDB`);
         console.log('Połączono z MongoDB...');
 
     }catch(err){

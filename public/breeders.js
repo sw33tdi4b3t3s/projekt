@@ -1,9 +1,15 @@
 export function initBreeders(){
-    console.log("Inicjalizacja initBreeders()");
     //BREEDER SHOW ALL
     const breederListButton = document.getElementById('breederListButton');
     const breedersList = document.getElementById('breedersList');
-    breederListButton.addEventListener('click', async()=>{
+    
+    breederListButton.addEventListener('click', async(e)=>{
+        e.preventDefault();
+
+        if (breedersList.innerHTML.trim() !== '') {
+            breedersList.innerHTML = '';
+            return;
+        }
 
         try{
             const response = await fetch('/api/breeders/all');
@@ -26,16 +32,15 @@ export function initBreeders(){
 
 
     //BREEDER ADD
-
     const breederAddButton = document.getElementById('breederAddButton');
     const breederName = document.getElementById('breederName');
     const breederCountry = document.getElementById('breederCountry');
     const breederNotes = document.getElementById('breederNotes');
+    
     breederAddButton.addEventListener('click', async ()=>{
-
         try{
             const nameValue = breederName.value.trim();
-            const countryValue = breederCountry.value.trim().toUpperCase();
+            const countryValue = breederCountry.value.trim(); 
             const notesValue = breederNotes ? breederNotes.value.trim() : '';
 
             if(!nameValue || !countryValue){
@@ -45,7 +50,7 @@ export function initBreeders(){
 
             const newBreeder ={
                 name: nameValue,
-                countryCode: countryValue,
+                countryCode: countryValue, 
                 notes: notesValue
             }
 
@@ -69,16 +74,13 @@ export function initBreeders(){
         }
     });
 
-    //COUNTRY FIND
-
+    //COUNTRY FIND (wyszukiwanie hodowcy)
     const breederFindButton = document.getElementById('breederFindButton');
 
     breederFindButton.addEventListener('click', async ()=>{
-
         try{
-
             const nameValue = breederName.value.trim();
-            const countryValue = breederCountry.value.trim().toUpperCase();
+            const countryValue = breederCountry.value.trim();
 
             if(!nameValue || !countryValue){
                 alert("wypelnij oba pola!")
@@ -105,13 +107,12 @@ export function initBreeders(){
     const breederDeleteButton = document.getElementById('breederDeleteButton');
 
     breederDeleteButton.addEventListener('click', async () => {
-        console.log("Kliknięto usuwanie hodowcy");
         try {
             const nameValue = breederName.value.trim();
-            const countryValue = breederCountry.value.trim().toUpperCase();
+            const countryValue = breederCountry.value.trim(); 
 
             if (!nameValue || !countryValue) {
-                alert("Podaj nazwę hodowcy i kod kraju, aby go usunąć!");
+                alert("Podaj nazwę hodowcy i kod kraju lub nazwę kraju, aby go usunąć!");
                 return;
             }
 
@@ -142,10 +143,10 @@ export function initBreeders(){
     breederEditButton.addEventListener('click', async () => {
         try {
             const currentName = breederName.value.trim();
-            const currentCountry = breederCountry.value.trim().toUpperCase();
+            const currentCountry = breederCountry.value.trim(); 
 
             const newNameValue = breederNewName.value.trim();
-            const newCountryValue = breederNewCountry.value.trim().toUpperCase();
+            const newCountryValue = breederNewCountry.value.trim(); 
             const newNotesValue = breederNewNotes.value.trim();
 
             if (!currentName || !currentCountry) {
@@ -160,7 +161,7 @@ export function initBreeders(){
 
             const updatedData = {};
             if (newNameValue) updatedData.name = newNameValue;
-            if (newCountryValue) updatedData.countryCode = newCountryValue;
+            if (newCountryValue) updatedData.country = newCountryValue;
             if (newNotesValue) updatedData.notes = newNotesValue;
 
             const response = await fetch(`/api/breeders/${encodeURIComponent(currentName)}/${encodeURIComponent(currentCountry)}`, {
@@ -180,5 +181,4 @@ export function initBreeders(){
             alert(error.message);
         }
     });
-
 }

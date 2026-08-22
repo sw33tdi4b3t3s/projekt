@@ -14,14 +14,15 @@ curl -X POST http://localhost:3000/api/horses/add -H "Content-Type: application/
 ######################################
 
 
-zwalidowac wyszukiwanie or!
+seedowanie/mongoCompass######
+{ "birthYear": { "$gte": 2000 } }
+############################
 
-sprawdzic dla horses zapytania z krajem konia/hodowcy/rodzicow
-
-wyciagnac do pliku funkcje ze wszystkich plikow ?
 
 szukac po unikalnym indeksie nie kompletnym typu tylko po name dla konia!!!!!
 
-seedowanie danych do sprawdzenia byly zmiany
+autoryzacja do zrobienia
 
-dokonczyc robienie dla pozostalych api lacznika z frontem
+RODOWOD DO ZROBIENIA | ZROBIONE
+
+buildquery funkcje do analizy!

@@ -2,7 +2,14 @@ export function initCountries(){
     //COUNTRY SHOW ALL
     const countryListButton = document.getElementById('countryListButton');
     const countriesList = document.getElementById('countriesList');
-    countryListButton.addEventListener('click', async()=>{
+    
+    countryListButton.addEventListener('click', async(e)=>{
+        e.preventDefault();
+
+        if (countriesList.innerHTML.trim() !== '') { // zamykanie i otwieranie listy
+            countriesList.innerHTML = '';
+            return;
+        }
 
         try{
             const response = await fetch('/api/countries/all');
@@ -22,12 +29,11 @@ export function initCountries(){
     });
 
     //COUNTRY ADD
-
     const countryAddButton = document.getElementById('countryAddButton');
     const countryName = document.getElementById('countryName');
     const countryCode = document.getElementById('countryCode');
+    
     countryAddButton.addEventListener('click', async ()=>{
-
         try{
             const nameValue = countryName.value.trim();
             const codeValue = countryCode.value.trim().toUpperCase();
@@ -61,15 +67,12 @@ export function initCountries(){
     });
 
     //COUNTRY FIND
-
     const countryFindButton = document.getElementById('countryFindButton');
 
     countryFindButton.addEventListener('click', async ()=>{
-
         try{
-
             const nameValue = countryName.value.trim();
-            const codeValue = countryCode.value.trim().toUpperCase();
+            const codeValue = countryCode.value.trim(); 
 
             const searchValue = nameValue || codeValue;
 
@@ -95,15 +98,12 @@ export function initCountries(){
     });
 
     //COUNTRY DELETE
-
     const countryDeleteButton = document.getElementById('countryDeleteButton');
 
     countryDeleteButton.addEventListener('click', async ()=>{
-
         try{
-
             const nameValue = countryName.value.trim();
-            const codeValue = countryCode.value.trim().toUpperCase();
+            const codeValue = countryCode.value.trim(); 
 
             const deleteValue = nameValue || codeValue;
 
@@ -132,21 +132,18 @@ export function initCountries(){
     });
 
     //COUNTRY EDIT
-
     const countryNewName = document.getElementById('countryNewName');
     const countryNewCode = document.getElementById('countryNewCode');
     const countryEditButton = document.getElementById('countryEditButton');
 
     countryEditButton.addEventListener('click', async ()=>{
-
         try{
-
             const nameValue = countryName.value.trim();
-            const codeValue = countryCode.value.trim().toUpperCase();
+            const codeValue = countryCode.value.trim(); 
             const editValue = nameValue || codeValue;
 
             const newNameValue = countryNewName.value.trim();
-            const newCodeValue = countryNewCode.value.trim().toUpperCase();
+            const newCodeValue = countryNewCode.value.trim().toUpperCase(); 
 
             if(!editValue){
                 alert("wypelnij ktores z pol do wyszukania edytowanego kraju! ")
@@ -158,11 +155,9 @@ export function initCountries(){
                 return;
             }
 
-
-            const editedCountry = {
-                name: newNameValue, 
-                code: newCodeValue
-            };
+            const editedCountry = {};
+            if (newNameValue) editedCountry.name = newNameValue;
+            if (newCodeValue) editedCountry.code = newCodeValue;
 
             const response = await fetch(`/api/countries/${encodeURIComponent(editValue)}`, {
                 method: 'PATCH',
@@ -176,7 +171,7 @@ export function initCountries(){
                 throw new Error(result.error || "cos poszlo nie tak!");
             }
             
-            alert("dokonano zmian: "+ editedCountry.name +" " +editedCountry.code);
+            alert("dokonano zmian!");
 
             countryNewCode.value = "";
             countryNewName.value = "";

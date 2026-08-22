@@ -1,5 +1,5 @@
 const mongoose = require("mongoose");
-const {fakerPL} = require('@faker-js/faker');
+const { fakerPL } = require('@faker-js/faker');
 const Country = require("../models/Country");
 const Breeder = require("../models/Breeder");
 const Horse = require("../models/Horse");
@@ -8,8 +8,8 @@ const connectDB = require("../db.js");
 const faker = fakerPL;
 
 const currentYear = new Date().getFullYear();
-let qtyGen = 6; 
-let qtyHorsesPerGen = 20;
+let qtyGen = 7; 
+let qtyHorsesPerGen = 40;
 let qtyBreeders = 10;
 let baseCountries = [];
 let baseBreeders = [];
@@ -26,13 +26,6 @@ function generateHorseName(gender){
     return faker.person.firstName();
 }
 
-
-function randomFromArray(array){
-    return array[Math.floor(Math.random() * array.length)];
-}
-
-
-
 async function seedCountries(){
     await Country.deleteMany({});
 
@@ -43,21 +36,19 @@ async function seedCountries(){
         {name: "Włochy" , code: "IT"},
         {name: "Niemcy" , code: "DE"},
         {name: "Arabia Saudyjska" , code: "AS"}
-];
+    ];
 
     baseCountries = await Country.insertMany(countries);
-
 }
-
 
 async function seedBreeders(){
     await Breeder.deleteMany({});
 
     const breeders = [];
 
-    for(let i =0; i<qtyBreeders; i++){
+    for(let i = 0; i < qtyBreeders; i++){
         const breederName = faker.person.firstName() +" "+ faker.person.lastName();
-        const breederCountry = randomFromArray(baseCountries);
+        const breederCountry = faker.helpers.arrayElement(baseCountries);
         const breederNotes = faker.lorem.sentences(3);
         breeders.push({name: breederName, country: breederCountry._id, notes: breederNotes});
     }
@@ -70,110 +61,88 @@ async function seedHorses(){
     
     const genders = ["ogier", "klacz", "wałach"];
     const colors = ["siwa", "gniada", "kasztanowata", "kara"];
+    const startYearForOldestGen = 1930;
+    let previousGenOgiery = [];
+    let previousGenKlacze = [];
 
-    const horsesgen0 = [];
-    const horsesNextGens = [];
+    for(let gen = qtyGen; gen >= 0; gen--){
+        console.log(`\nGenerowanie pokolenia: ${gen} wstecz...`);
 
-    //gen 0(bez ojca i matki)
-    for(let j =0; j<qtyHorsesPerGen; j++){
+        let savedHorsesInThisGen = [];
 
-        
-        const horseBirthYear = faker.number.int({min: currentYear - 100, max: currentYear});
-        const horseGender = randomFromArray(genders);
-        const horseName = generateHorseName(horseGender);
-        
+        for(let i = 0; i < qtyHorsesPerGen; i++){
+            let horseBirthYear, fatherId = null, motherId = null;
 
-        const horseColor = randomFromArray(colors);
-        const horseCountry = randomFromArray(baseCountries);
-        const horseBreeder = randomFromArray(baseBreeders);
-        const horseNotes = faker.lorem.sentences(3);
-
-        horsesgen0.push({
-            name: horseName, 
-            birthYear: horseBirthYear,
-            gender: horseGender,
-            color: horseColor,
-            country: horseCountry._id,
-            breeder: horseBreeder._id,
-            notes: horseNotes
-        });
-    }
-    let gen0 = await Horse.insertMany(horsesgen0); //wykorzystanie do kolejnych generacji
-
-
-    let fatherCandidate = [];
-    let motherCandidate = [];
-
-    function candidatesFatherMother(currentList){
-        for(let i =0; i<currentList.length; i++){
-
-           const candidate = currentList[i];
-
-            if(candidate.gender === "ogier"){
-                    fatherCandidate.push(candidate);
-                }else if(candidate.gender === "klacz"){
-                    motherCandidate.push(candidate);
+            if(gen === qtyGen){
+                horseBirthYear = faker.number.int({min: startYearForOldestGen, max: startYearForOldestGen + 10});
+            } else {
+                if(previousGenKlacze.length === 0 || previousGenOgiery.length === 0){
+                    break;
                 }
-        }
-    }
 
-    candidatesFatherMother(gen0);
+                const mother = faker.helpers.arrayElement(previousGenKlacze);
 
+                const validFathers = previousGenOgiery.filter(
+                    o => Math.abs(o.birthYear - mother.birthYear) <= 18
+                );
 
-    //next gens
-    for(let i=0; i<qtyGen; i++){
-        const horsesNextGens =[];
+                if(validFathers.length === 0) continue;
 
-        for(let i=0; i<qtyHorsesPerGen; i++){
+                const father = faker.helpers.arrayElement(validFathers);
 
-            const horseFather = randomFromArray(fatherCandidate);
-            const horseMother = randomFromArray(motherCandidate);
+                const minYear = Math.max(father.birthYear + 3, mother.birthYear + 3);
+                let maxYear = Math.min(father.birthYear + 21, mother.birthYear + 21);
 
-            if(!horseFather || !horseMother){
-                continue;
+                if(maxYear > currentYear) maxYear = currentYear;
+                if(minYear > maxYear) continue;
+
+                horseBirthYear = faker.number.int({min: minYear, max: maxYear});
+                fatherId = father._id;
+                motherId = mother._id;
             }
 
-            const minYear = Math.max(horseFather.birthYear+3, horseMother.birthYear+3);
-            const maxYear = Math.min(horseFather.birthYear+21,horseMother.birthYear+21,currentYear)
-            if(minYear > maxYear){
-                continue;
+            const genderRoll = Math.random();
+            let horseGender = "wałach";
+            if(genderRoll < 0.45) {
+                horseGender = "ogier";
+            } else if(genderRoll < 0.90){
+                horseGender = "klacz";
             }
-            const horseBirthYear = faker.number.int({min: minYear, max: maxYear}); //zalezne od wieku rodzicow
-            
-            const horseGender = randomFromArray(genders);
+
             const horseName = generateHorseName(horseGender);
 
-            const horseColor = randomFromArray(colors);
-            const horseCountry = randomFromArray(baseCountries);
-            const horseBreeder = randomFromArray(baseBreeders);
-            const horseNotes = faker.lorem.sentences(3);
-
-            horsesNextGens.push({
-                name: horseName, 
+            const newHorse = new Horse({
+                name: horseName,
                 birthYear: horseBirthYear,
                 gender: horseGender,
-                color: horseColor,
-                country: horseCountry._id,
-                father: horseFather._id,
-                mother: horseMother._id,
-                breeder: horseBreeder._id,
-                notes: horseNotes
+                color: faker.helpers.arrayElement(colors),
+                country: faker.helpers.arrayElement(baseCountries)._id,
+                breeder: faker.helpers.arrayElement(baseBreeders)._id,
+                notes: faker.lorem.sentence()
             });
+
+            if (fatherId && motherId) {
+                newHorse.father = fatherId;
+                newHorse.mother = motherId;
+            }
             
+            try {
+                await newHorse.save();
+                savedHorsesInThisGen.push(newHorse);
+            } catch (err) {
+                if(err.code !== 11000) {
+                    console.log(`Błąd walidacji przy zapisie konia (rodowód odrzucony): ${err.message}`);
+                }
+            }
         }
-        const currentGen = await Horse.insertMany(horsesNextGens);
-        fatherCandidate =[];
-        motherCandidate =[];
-        candidatesFatherMother(currentGen);
+        
+        console.log(`Wygenerowano i zapisano ${savedHorsesInThisGen.length} koni w pokoleniu ${gen}.`);
+        previousGenOgiery = savedHorsesInThisGen.filter(h => h.gender === "ogier");
+        previousGenKlacze = savedHorsesInThisGen.filter(h => h.gender === "klacz");
     }
-
-
-    
 }
 
-
 async function seedDataBase(){
-
     try{
         await connectDB();
         
@@ -188,8 +157,6 @@ async function seedDataBase(){
     }catch(err){
         console.log("blad przy seedowaniu: "+err.message);
     }
-    
-
 }
 
 seedDataBase();

@@ -49,5 +49,72 @@
         <input id="breederEditButton" type="button" value="zedytuj hodowce">
     </div>
 
+    <hr>
+
+    <div class="horses">
+        <h2>LISTA KONI</h2>
+
+        <input type="button" id="horseListButton" value="Pokaz liste koni">
+        <ul id="horsesList"></ul>
+        
+        <h2>DODAJ KONIA/ZNAJDZ KONIA</h2>
+        <input id="hName" placeholder="nazwa konia">
+        <input id="hBirthYear" placeholder="rok urodzenia konia">
+        <input id="hCountry" placeholder="kraj konia">
+
+        <input id="hGender" placeholder="płeć konia">
+        <input id="hColor" placeholder="maść konia">
+        <input id="hNotes" placeholder="notatki konia">
+
+        <input id="hBreederName" placeholder="nazwa hodowcy konia">
+        <input id="hBreederCountry" placeholder="ISO kraju hodowcy">
+
+        <input id="hFatherName" placeholder="nazwa ojca konia">
+        <input id="hFatherYear" placeholder="rok urodzenia ojca konia">
+        <input id="hFatherCountry" placeholder="kraj ojca konia">
+
+        <input id="hMotherName" placeholder="nazwa matki konia">
+        <input id="hMotherYear" placeholder="rok urodzenia matki konia">
+        <input id="hMotherCountry" placeholder="kraj matki konia">
+        <input type="button" id="horseAddButton" value="dodaj konia">
+        <input type="button" id="horseFindButton" value="znajdź konia">
+        <input type="button" id="horseDeleteButton" value="usuń konia">
+        <input type="button" id="horseEditButton" value="zedytuj konia">
+        <br></br>
+        <input id="hNewName" placeholder="nowe imie konia">
+        <input id="hNewBirthYear" placeholder="nowy rok urodzenia konia">
+        <input id="hNewCountry" placeholder="nowy kraj">
+        <input id="hNewGender" placeholder="nowa płeć">
+        <input id="hNewColor" placeholder="nowa maść">
+        <input id="hNewNotes" placeholder="nowe notatki">
+
+        <input id="hNewBreederName" placeholder="nowe imię hodowcy">
+        <input id="hNewBreederCountry" placeholder="nowy kraj hodowcy">
+
+        <input id="hNewFatherName" placeholder="nowe imię ojca">
+        <input id="hNewFatherYear" placeholder="nowy rok urodzenia ojca">
+        <input id="hNewFatherCountry" placeholder="nowy kraj ojca">
+
+        <input id="hNewMotherName" placeholder="nowe imię matki">
+        <input id="hNewMotherYear" placeholder="nowy rok urodzenia matki">
+        <input id="hNewMotherCountry" placeholder="nowy kraj matki">
+
+        
+        <h2>RODOWÓD (DRZEWO GENEALOGICZNE)</h2>
+        <input id="lDepth" type="number" placeholder="głębokość drzewa (np. 3)" value="3">
+        <input type="button" id="horseLineageButton" value="Generuj drzewo 🌳">
+        
+        <!-- Kontener, w którym narysuje się wizualne drzewo -->
+        <div id="horseLineageResult" style="
+            margin-top: 15px; 
+            padding: 15px; 
+            background: #f4f4f4; 
+            border: 1px solid #ccc; 
+            font-family: monospace; 
+            white-space: pre; 
+            line-height: 1.5; 
+            display: none;"></div>
+    </div>
+
 </body>
 </html>

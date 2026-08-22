@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const {escapeRegex} = require('../utils/helpers');
 
 const countrySchema = new mongoose.Schema({
     name:{
@@ -18,6 +19,23 @@ const countrySchema = new mongoose.Schema({
         unique: true
     },
 });
+
+countrySchema.statics.findByCodeOrName = async function(param){
+    if(!param) return null;
+
+    const trimmed = param.trim();
+    const safeCountry = escapeRegex(trimmed);
+
+
+    return await this.findOne({
+        $or:[
+            {code: trimmed.toUpperCase()},
+            {name: {$regex: `^${safeCountry}$`, $options: 'i'}}
+
+        ]
+
+    })
+}
 
 const Country = mongoose.model("Country",countrySchema);
 

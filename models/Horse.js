@@ -56,7 +56,7 @@ const horseSchema = new mongoose.Schema({
 
 })
 
-horseSchema.index({name:1, country:1, birthYear:1},{unique: true});//rosnaco (buduje unikalny index)
+horseSchema.index({name:1, country:1, birthYear:1},{unique: true});
 
 horseSchema.pre("save",async function(){
     const currentYear = new Date().getFullYear();

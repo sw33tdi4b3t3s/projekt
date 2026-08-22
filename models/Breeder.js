@@ -19,7 +19,7 @@ const breederSchema = new mongoose.Schema({
 
 });
 
-breederSchema.index({name:1, country:1},{unique: true});//rosnaco (buduje unikalny index)
+breederSchema.index({name:1, country:1},{unique: true});
 
 const Breeder = mongoose.model("Breeder",breederSchema);
 
