@@ -26,3 +26,5 @@ autoryzacja do zrobienia
 RODOWOD DO ZROBIENIA | ZROBIONE
 
 buildquery funkcje do analizy!
+
+breeders oraz countries ogarniete api pod wzgledem wyszukiwania po pojedynczym parametrze do zrobienia jescze konie!

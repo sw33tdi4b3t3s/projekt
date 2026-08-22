@@ -8,13 +8,13 @@ router.post('/add', async (req, res) => {
         const { name, countryCode, notes } = req.body;
 
         if (!name || !countryCode) {
-            return res.status(400).json({ error: `pola name oraz countryCode są wymagane! -> name: ${name}, countryCode: ${countryCode}` });
+            return res.status(400).json({ error: `pola name lub countryCode są wymagane! -> name: ${name}, countryCode: ${countryCode}` });
         }
 
         const country = await Country.findByCodeOrName(countryCode);
 
         if (!country) {
-            return res.status(404).json({ error: `nie znaleziono kraju(ISO): ${countryCode}` });
+            return res.status(404).json({ error: `nie znaleziono kraju: ${countryCode}` });
         }
 
         const breeder = new Breeder({
@@ -44,18 +44,26 @@ router.get('/all', async (req, res) => {
     }
 });
 
-router.route('/:name/:country')
+router.route('/search')
     .get(async (req, res) => {
         try {
-            const { name, country } = req.params;
+            const { name, country } = req.query;
             const query = await buildQuery(name, country);
-
+            
             if (!query) {
                 return res.status(400).json({ error: `nie znaleziono kraju w bazie dla parametru: ${country}` });
             }
 
-            const breeder = await Breeder.findOne(query).populate('country');
+            const breeder = await Breeder.find(query).populate('country');
 
+            if(breeder.length===0){
+                return res.status(404).json({error: `Nie znaleziono hodowcy spelniajacego kryteria.`});
+            }
+
+            if(breeder.length>1){
+                return res.status(405).json({error: `wyszukiwanie po danym parametrze nie daje jednoznacznego wyniku...`});
+            }
+            
             if (!breeder) {
                 return res.status(404).json({ error: `Hodowca ${name} w kraju ${country} nie istnieje w bazie ` });
             }
@@ -69,20 +77,30 @@ router.route('/:name/:country')
 
     .delete(async (req, res) => {
         try {
-            const { name, country } = req.params;
+            const { name, country } = req.query;
             const query = await buildQuery(name, country);
 
             if (!query) {
-                return res.status(400).json({ error: `nie znaleziono kraju w bazie dla parametru: ${country}` });
+                return res.status(400).json({ error: `Nie podano prawidłowych kryteriów wyszukiwania.` });
+            }
+
+            const breeders = await Breeder.find(query);
+
+            if (breeders.length === 0) {
+                return res.status(404).json({ error: `Nie znaleziono hodowcy spełniającego kryteria.` });
+            }
+
+            if (breeders.length > 1) {
+                return res.status(405).json({ error: `Wyszukiwanie po danym parametrze nie daje jednoznacznego wyniku...` });
             }
 
             const result = await Breeder.deleteOne(query);
 
             if (result.deletedCount === 0) {
-                return res.status(404).json({ error: `Hodowca ${name} z kraju ${country} nie istnieje w bazie! ` });
+                return res.status(404).json({ error: `Hodowca nie istnieje w bazie!` });
             }
 
-            res.status(200).json({ message: `pomyślnie usunięto hodowce: ${name}, ${country}` });
+            res.status(200).json({ message: `Pomyślnie usunięto hodowcę.` });
 
         } catch (err) {
             res.status(500).json({ error: err.message });
@@ -92,17 +110,27 @@ router.route('/:name/:country')
 
     .patch(async (req, res) => {
         try {
-            const { name: paramName, country: paramCountry } = req.params; 
+            const { name: paramName, country: paramCountry } = req.query; 
             const { name, country, notes } = req.body;
 
             const query = await buildQuery(paramName, paramCountry);
 
             if (!query) {
-                return res.status(404).json({ error: `nie znaleziono hodowcy w bazie dla parametru: ${paramCountry}` });
+                return res.status(400).json({ error: `Nie podano prawidłowych kryteriów wyszukiwania.` });
             }
 
             if (!name && !country && notes === undefined) {
                 return res.status(400).json({ error: `Wymagany parametr do update to name, country lub notes!` });
+            }
+
+            const breeders = await Breeder.find(query);
+
+            if (breeders.length === 0) {
+                return res.status(404).json({ error: `Nie znaleziono hodowcy spełniającego kryteria.` });
+            }
+
+            if (breeders.length > 1) {
+                return res.status(405).json({ error: `Wyszukiwanie po danym parametrze nie daje jednoznacznego wyniku...` });
             }
             
             const updateData = {};
@@ -121,30 +149,43 @@ router.route('/:name/:country')
             const result = await Breeder.updateOne(query, updateData);
 
             if (result.matchedCount === 0) {
-                return res.status(404).json({ error: `brak danego hodowcy w bazie` });
+                return res.status(404).json({ error: `Brak danego hodowcy w bazie` });
             }
 
-            res.status(200).json({ message: `pomyslnie dokonano zmian w hodowcy` });
+            res.status(200).json({ message: `Pomyślnie dokonano zmian w hodowcy` });
 
         } catch (err) {
             if (err.code === 11000) {
-                return res.status(409).json({ error: `Hodowca o takiej nazwie i kraju juz istnieje w bazie!` });
+                return res.status(409).json({ error: `Hodowca o takiej nazwie i kraju już istnieje w bazie!` });
             }
             res.status(500).json({ error: err.message });
         }
     });
 
-async function buildQuery(name, countryCodeParam) {
-    if (!name || !countryCodeParam) return null;
+async function buildQuery(nameParam, countryParam) {
+    let countryQuery = null;
+    let nameQuery = null;
 
-    const country = await Country.findByCodeOrName(countryCodeParam);
+    if (countryParam) {
+        const country = await Country.findByCodeOrName(countryParam);
+        if (country) {
+            countryQuery = { country: country._id };
+        }
+    }
 
-    if (!country) return null;
+    if (nameParam) {
+        nameQuery = { name: { $regex: `^${nameParam.trim()}`, $options: 'i' } };
+    }
 
-    return {
-        name: name.trim(),
-        country: country._id
-    };
+    if (!nameQuery && !countryQuery) {
+        return null;
+    }
+
+    if (nameQuery && countryQuery) {
+        return { $and: [nameQuery, countryQuery] };
+    }
+
+    return nameQuery || countryQuery;
 }
 
 module.exports = router;
