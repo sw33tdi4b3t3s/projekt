@@ -3,6 +3,7 @@ const router = express.Router();
 const Country = require('../../models/Country');
 const Breeder = require('../../models/Breeder');
 const Horse = require('../../models/Horse');
+const {escapeRegex} = require('../../utils/helpers');
 
 router.post('/add', async (req, res) => {
     try {
