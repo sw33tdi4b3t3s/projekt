@@ -18,13 +18,10 @@ seedowanie/mongoCompass######
 { "birthYear": { "$gte": 2000 } }
 ############################
 
+zastanowic sie co ograniczyc uzytkownikowi?
 
-szukac po unikalnym indeksie nie kompletnym typu tylko po name dla konia!!!!!
+RODOWOD DO ZROBIENIA | ZROBIONE?
 
-autoryzacja do zrobienia
+Pobieranie informacji o potomstwie danego konia (z opcjonalnym „filtrem” dotyczącym płci i/lub hodowcy).
 
-RODOWOD DO ZROBIENIA | ZROBIONE
-
-buildquery funkcje do analizy!
-
-breeders oraz countries ogarniete api pod wzgledem wyszukiwania po pojedynczym parametrze do zrobienia jescze konie!
+frontend wedlug rol

@@ -2,8 +2,10 @@ const express = require('express');
 const router = express.Router();
 const Country = require('../../models/Country');
 const Breeder = require('../../models/Breeder');
+const verifyToken = require('../../middleware/tokenAuth');
+const checkRole = require('../../middleware/checkRole');
 
-router.post('/add', async (req, res) => {
+router.post('/add', verifyToken, checkRole('admin'), async (req, res) => {
     try {
         const { name, countryCode, notes } = req.body;
 
@@ -35,7 +37,7 @@ router.post('/add', async (req, res) => {
     }
 });
 
-router.get('/all', async (req, res) => {
+router.get('/all', verifyToken,checkRole('admin'), async (req, res) => {
     try {
         const breeders = await Breeder.find().populate('country');
         res.status(200).json(breeders);
@@ -45,7 +47,7 @@ router.get('/all', async (req, res) => {
 });
 
 router.route('/search')
-    .get(async (req, res) => {
+    .get(verifyToken,checkRole('admin'), async (req, res) => {
         try {
             const { name, country } = req.query;
             const query = await buildQuery(name, country);
@@ -75,7 +77,7 @@ router.route('/search')
         }
     })
 
-    .delete(async (req, res) => {
+    .delete(verifyToken,checkRole('admin'), async (req, res) => {
         try {
             const { name, country } = req.query;
             const query = await buildQuery(name, country);
@@ -108,7 +110,7 @@ router.route('/search')
 
     })
 
-    .patch(async (req, res) => {
+    .patch(verifyToken,checkRole('admin'), async (req, res) => {
         try {
             const { name: paramName, country: paramCountry } = req.query; 
             const { name, country, notes } = req.body;

@@ -3,9 +3,11 @@ const router = express.Router();
 const Country = require('../../models/Country');
 const Breeder = require('../../models/Breeder');
 const Horse = require('../../models/Horse');
-const {escapeRegex} = require('../../utils/helpers');
+const { escapeRegex } = require('../../utils/helpers');
+const verifyToken = require('../../middleware/tokenAuth');
+const checkRole = require('../../middleware/checkRole');
 
-router.post('/add', async (req, res) => {
+router.post('/add', verifyToken,checkRole('admin'), async (req, res) => {
     try {
         const { name, birthYear, gender, color, countryCode, breederName, breederCountryCode, father, mother, notes } = req.body;
 
@@ -114,7 +116,7 @@ router.post('/add', async (req, res) => {
     }
 });
 
-router.get('/all', async (req, res) => {
+router.get('/all', verifyToken,checkRole('admin'), async (req, res) => {
     try {
         const horses = await Horse.find()
             .populate('country')
@@ -143,76 +145,99 @@ router.get('/all', async (req, res) => {
     }
 });
 
-router.route('/:name/:country/:birthYear')
-
-    .get(async (req, res) => {
+router.route('/search')
+    .get(verifyToken,checkRole('admin'), async (req, res) => {
         try {
-            const { name, country, birthYear } = req.params;
+            const { name, country, birthYear } = req.query;
             const query = await buildHorseQuery(name, country, birthYear);
 
             if (!query) {
-                return res.status(400).json({ error: `Nie znaleziono kraju w bazie dla parametru: ${country}` });
+                return res.status(400).json({ error: `Nie podano prawidłowych kryteriów wyszukiwania lub nie znaleziono kraju dla parametru: ${country}` });
             }
 
-            const horse = await Horse.findOne(query)
+            const horses = await Horse.find(query)
                 .populate('country')
                 .populate('breeder')
                 .populate('father')
                 .populate('mother');
 
-            if (!horse) {
-                return res.status(404).json({ error: `Koń ${name} (${birthYear}) z kraju ${country} nie istnieje w bazie.` });
+            if (horses.length === 0) {
+                return res.status(404).json({ error: `Nie znaleziono konia spełniającego kryteria.` });
             }
 
-            res.status(200).json(horse);
+            if (horses.length > 1) {
+                return res.status(409).json({ error: `Wyszukiwanie po danym parametrze nie daje jednoznacznego wyniku...` });
+            }
+
+            res.status(200).json(horses);
 
         } catch (err) {
             res.status(500).json({ error: err.message });
         }
     })
 
-    .delete(async (req, res) => {
+    .delete(verifyToken,checkRole('admin'), async (req, res) => {
         try {
-            const { name, country, birthYear } = req.params;
+            const { name, country, birthYear } = req.query;
             const query = await buildHorseQuery(name, country, birthYear);
 
             if (!query) {
-                return res.status(400).json({ error: `Nie znaleziono kraju w bazie dla parametru: ${country}` });
+                return res.status(400).json({ error: `Nie podano prawidłowych kryteriów wyszukiwania.` });
+            }
+
+            const horses = await Horse.find(query);
+
+            if (horses.length === 0) {
+                return res.status(404).json({ error: `Nie znaleziono konia spełniającego kryteria.` });
+            }
+
+            if (horses.length > 1) {
+                return res.status(409).json({ error: `Wyszukiwanie po danym parametrze nie daje jednoznacznego wyniku...` });
             }
 
             const result = await Horse.deleteOne(query);
 
             if (result.deletedCount === 0) {
-                return res.status(404).json({ error: `Koń ${name} (${birthYear}) z kraju ${country} nie istnieje w bazie!` });
+                return res.status(404).json({ error: `Koń nie istnieje w bazie!` });
             }
 
-            res.status(200).json({ message: `Pomyślnie usunięto konia: ${name} (${birthYear})` });
+            res.status(200).json({ message: `Pomyślnie usunięto konia.` });
 
         } catch (err) {
             res.status(500).json({ error: err.message });
         }
     })
 
-    .patch(async (req, res) => {
+    .patch(verifyToken,checkRole('admin'), async (req, res) => {
         try {
-            const { name: paramName, country: paramCountry, birthYear: paramBirthYear } = req.params;
+            const { name: paramName, country: paramCountry, birthYear: paramBirthYear } = req.query;
             const { name, birthYear, gender, color, countryCode, father, mother, breederName, breederCountryCode, notes } = req.body;
 
             const query = await buildHorseQuery(paramName, paramCountry, paramBirthYear);
 
             if (!query) {
-                return res.status(404).json({ error: `Nie znaleziono w bazie kraju dla parametru: ${paramCountry}` });
+                return res.status(400).json({ error: `Nie podano prawidłowych kryteriów wyszukiwania.` });
+            }
+
+            if (!name && !birthYear && !gender && !color && !countryCode && father === undefined && mother === undefined && breederName === undefined && notes === undefined) {
+                return res.status(400).json({ error: `Wymagany jest co najmniej jeden parametr do update!` });
+            }
+
+            const horses = await Horse.find(query);
+
+            if (horses.length === 0) {
+                return res.status(404).json({ error: `Nie znaleziono konia spełniającego kryteria.` });
+            }
+
+            if (horses.length > 1) {
+                return res.status(409).json({ error: `Wyszukiwanie po danym parametrze nie daje jednoznacznego wyniku...` });
             }
 
             const horse = await Horse.findOne(query);
 
-            if (!horse) {
-                return res.status(404).json({ error: `Koń ${paramName} (${paramBirthYear}) nie istnieje w bazie!` });
-            }
-
             if (name) horse.name = name.trim();
             if (birthYear) horse.birthYear = Number(birthYear);
-            if (gender) horse.gender = gender;
+            if (gender) horse.gender = gender.toLowerCase();
             if (color) horse.color = color;
             if (notes !== undefined) horse.notes = notes;
 
@@ -349,7 +374,7 @@ router.route('/:name/:country/:birthYear')
         }
     });
 
-router.get('/lineAge/:nameHorse/:countryHorse/:birthYearHorse', async (req, res) => {
+router.get('/lineAge/:nameHorse/:countryHorse/:birthYearHorse', verifyToken, async (req, res) => {//tutaj zwykly user moze zajrzec
     try {
         const { nameHorse, countryHorse, birthYearHorse } = req.params;
         const depth = parseInt(req.query.depth) || 3;
@@ -368,20 +393,41 @@ router.get('/lineAge/:nameHorse/:countryHorse/:birthYearHorse', async (req, res)
     }
 });
 
-async function buildHorseQuery(name, countryParam, birthYear) {
-    if (!name || !countryParam || !birthYear) return null;
+async function buildHorseQuery(nameParam, countryParam, birthYearParam) {
+    let countryQuery = null;
+    let nameQuery = null;
+    let birthYearQuery = null;
 
-    const country = await Country.findByCodeOrName(countryParam);
+    if (countryParam) {
+        const country = await Country.findByCodeOrName(countryParam);
+        if (country) {
+            countryQuery = { country: country._id };
+        }
+    }
 
-    if (!country) return null;
+    if (nameParam) {
+        const safeName = escapeRegex(nameParam.trim());
+        nameQuery = { name: { $regex: `^${safeName}`, $options: 'i' } };
+    }
 
-    const safeName = escapeRegex(name.trim());
+    if (birthYearParam) {
+        birthYearQuery = { birthYear: Number(birthYearParam) };
+    }
 
-    return {
-        name: { $regex: `^${safeName}$`, $options: 'i' },
-        country: country._id,
-        birthYear: Number(birthYear)
-    };
+    if (!nameQuery && !countryQuery && !birthYearQuery) {
+        return null;
+    }
+
+    const queries = [];
+    if (nameQuery) queries.push(nameQuery);
+    if (countryQuery) queries.push(countryQuery);
+    if (birthYearQuery) queries.push(birthYearQuery);
+
+    if (queries.length === 1) {
+        return queries[0];
+    }
+
+    return { $and: queries };
 }
 
 function buildLineageTree(depth) {

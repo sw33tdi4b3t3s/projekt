@@ -1,3 +1,5 @@
+import { getAuthHeaders } from './utils/auth.js';
+
 export function initBreeders(){
     //BREEDER SHOW ALL
     const breederListButton = document.getElementById('breederListButton');
@@ -12,7 +14,10 @@ export function initBreeders(){
         }
 
         try{
-            const response = await fetch('/api/breeders/all');
+            const response = await fetch('/api/breeders/all', {
+                method: 'GET',
+                headers: getAuthHeaders()
+            });
 
             if(!response.ok) throw new Error('nie udalo sie pobrac danych');
 
@@ -56,7 +61,7 @@ export function initBreeders(){
 
             const response = await fetch('/api/breeders/add', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json'},
+                headers: getAuthHeaders(),
                 body: JSON.stringify(newBreeder)
             });
 
@@ -87,7 +92,15 @@ export function initBreeders(){
                 return;
             }
 
-            const response = await fetch(`/api/breeders/${encodeURIComponent(nameValue)}/${encodeURIComponent(countryValue)}`);
+            const params = new URLSearchParams({
+                name: nameValue,
+                country: countryValue
+            });
+
+            const response = await fetch(`/api/breeders/search?${params.toString()}`, {
+                method: 'GET',
+                headers: getAuthHeaders()
+            });
 
             const result = await response.json();
 
@@ -95,7 +108,8 @@ export function initBreeders(){
                 throw new Error(result.error || "cos poszlo nie tak!");
             }
             
-            alert("znaleziono hodowce: "+ result.name + " " +result.country.code );
+            const foundBreeder = Array.isArray(result) ? result[0] : result;
+            alert("znaleziono hodowce: "+ foundBreeder.name + " " + (foundBreeder.country ? foundBreeder.country.code : ""));
 
         }catch(error){
             alert(error.message);
@@ -116,9 +130,14 @@ export function initBreeders(){
                 return;
             }
 
-            const response = await fetch(`/api/breeders/${encodeURIComponent(nameValue)}/${encodeURIComponent(countryValue)}`, {
+            const params = new URLSearchParams({
+                name: nameValue,
+                country: countryValue
+            });
+
+            const response = await fetch(`/api/breeders/search?${params.toString()}`, {
                 method: 'DELETE',
-                headers: { 'Content-Type': 'application/json' }
+                headers: getAuthHeaders()
             });
 
             const result = await response.json();
@@ -164,9 +183,14 @@ export function initBreeders(){
             if (newCountryValue) updatedData.country = newCountryValue;
             if (newNotesValue) updatedData.notes = newNotesValue;
 
-            const response = await fetch(`/api/breeders/${encodeURIComponent(currentName)}/${encodeURIComponent(currentCountry)}`, {
+            const params = new URLSearchParams({
+                name: currentName,
+                country: currentCountry
+            });
+
+            const response = await fetch(`/api/breeders/search?${params.toString()}`, {
                 method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
+                headers: getAuthHeaders(),
                 body: JSON.stringify(updatedData)
             });
 

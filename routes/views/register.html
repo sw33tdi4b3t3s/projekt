@@ -1,9 +1,99 @@
 <!DOCTYPE html>
 <html>
-<body>
+    <head>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+        <script type="module" src="/auth-main.js"></script>
+        <style>
+            body {
+                height: 100vh;
+                margin: 0;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                background-color: #e4f4ee;
+                overflow: hidden;
+            }
+            .div1 { 
+                background: white;
+                padding: 30px;
+                border-radius: 8px;
+                box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            }
+            .div1 h2 {
+                margin-top: 0;
+                text-align: center;
+                font-family: 'Trebuchet MS';
+            }
+            .input-container {
+                position: relative;
+                width: 250px; 
+                margin-bottom: 10px;
+            }
+            .input-container input {
+                width: 100%;
+                padding: 10px 40px 10px 15px; 
+                box-sizing: border-box;
+                border: 1px solid #ccc;
+                border-radius: 4px;
+            }
+            .input-container i {
+                position: absolute;
+                right: 15px;
+                top: 50%;
+                transform: translateY(-50%);
+                color: #888;
+            }
+            .div1 input[type="submit"] {
+                width: 100%;
+                padding: 10px;
+                background-color: rgb(55, 55, 233);
+                color: white;
+                border: none;
+                border-radius: 4px;
+                cursor: pointer;
+                margin-top: 5px;
+            }
+            .div1 input[type="submit"]:hover {
+                background-color: rgba(55, 55, 233, 0.688);
+            }
+            .div1 a {
+                display: block;              
+                text-align: center;          
+                margin-top: 15px;            
+                font-family: 'Trebuchet MS';
+                font-size: 13px;             
+                color: #555;                 
+                text-decoration: none;       
+            }
+            .div1 a:hover {
+                color: rgb(55, 55, 233);     
+                text-decoration: underline;  
+            }
+        </style>
+    </head>
+    <body>
+        <div class="div1">
+            <form id="register-form">
+                <h2>CREATE ACCOUNT</h2>
+                
+                <div class="input-container">
+                    <input placeholder="Name" type="text" name="name" required>
+                    <i class="fa-solid fa-circle-user"></i>
+                </div>
+                <div class="input-container">
+                    <input placeholder="Email" type="email" name="email" required>
+                    <i class="fa-regular fa-envelope"></i>
+                </div>
+                <div class="input-container">
+                    <input placeholder="Password" type="password" name="password" required>
+                    <i class="fa-solid fa-lock"></i>
+                </div>
+                
+                <input type="submit" value="SIGN UP">
+                
+                <a href="/login">Already have an account? Log in</a>
+            </form>
+        </div>
 
-<h1>to bedzie rejestracja</h1>
-<p>My first paragraph.</p>
-
-</body>
+    </body>
 </html>

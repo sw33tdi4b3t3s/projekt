@@ -1,8 +1,8 @@
 const mongoose = require("mongoose");
 const { fakerPL } = require('@faker-js/faker');
-const Country = require("../models/Country");
-const Breeder = require("../models/Breeder");
-const Horse = require("../models/Horse");
+const Country = require("../models/Country.js");
+const Breeder = require("../models/Breeder.js");
+const Horse = require("../models/Horse.js");
 const connectDB = require("../db.js");
 
 const faker = fakerPL;

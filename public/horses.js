@@ -1,3 +1,5 @@
+import { getAuthHeaders } from './utils/auth.js';
+
 export function initHorses(){
 
     //HORSE SHOW ALL
@@ -15,12 +17,15 @@ export function initHorses(){
 
 
         try {
-            const response = await fetch('/api/horses/all');
+            const response = await fetch('/api/horses/all', {
+                method: 'GET',
+                headers: getAuthHeaders()
+            });
+
             if (!response.ok) throw new Error('Nie udało się pobrać danych koni');
 
             const horses = await response.json();
 
-            // Funkcja pomocnicza do bezpiecznego wyciągania danych kraju (nazwa + kod ISO)
             const formatCountry = (countryObj, defaultText = "brak kraju") => {
                 if (!countryObj) return defaultText;
                 const name = countryObj.name || "brak nazwy";
@@ -29,22 +34,18 @@ export function initHorses(){
             };
 
             horsesList.innerHTML = horses.map(horse => {
-                // Ojciec
                 const fatherName = horse.father?.name || 'brak imienia ojca';
                 const fatherYear = horse.father?.birthYear || 'brak roku';
                 const fatherCountry = formatCountry(horse.father?.country, 'brak kraju ojca');
 
-                // Matka
                 const motherName = horse.mother?.name || 'brak imienia matki';
                 const motherYear = horse.mother?.birthYear || 'brak roku';
                 const motherCountry = formatCountry(horse.mother?.country, 'brak kraju matki');
 
-                // Hodowca
                 const breederName = horse.breeder?.name || 'brak hodowcy';
                 const breederCountry = formatCountry(horse.breeder?.country, 'brak kraju hodowcy');
                 const breederNotes = horse.breeder?.notes ? `[Notatki: ${horse.breeder.notes}]` : '';
 
-                // Konie
                 const horseCountry = formatCountry(horse.country);
                 const birthYear = horse.birthYear || 'brak roku';
                 const gender = horse.gender || 'brak płci';
@@ -79,7 +80,6 @@ export function initHorses(){
 
     const horseAddButton = document.getElementById('horseAddButton');
 
-    // Podstawowe
     const hName = document.getElementById('hName');
     const hBirthYear = document.getElementById('hBirthYear');
     const hGender = document.getElementById('hGender');
@@ -87,11 +87,9 @@ export function initHorses(){
     const hCountry = document.getElementById('hCountry');
     const hNotes = document.getElementById('hNotes');
     
-    // Hodowca
     const hBreederName = document.getElementById('hBreederName');
     const hBreederCountry = document.getElementById('hBreederCountry');
     
-    // Rodzice
     const hFatherName = document.getElementById('hFatherName');
     const hFatherYear = document.getElementById('hFatherYear');
     const hFatherCountry = document.getElementById('hFatherCountry');
@@ -102,7 +100,6 @@ export function initHorses(){
 
     horseAddButton.addEventListener('click', async () => {
         try {
-            // Pobieranie obowiązkowych
             const nameVal = hName.value.trim();
             const yearVal = hBirthYear.value.trim();
             const genderVal = hGender.value.trim();
@@ -129,10 +126,8 @@ export function initHorses(){
                 notes: notesVal
             };
 
-            // Obsługa opcjonalnego ojca
             const fNameVal = hFatherName ? hFatherName.value.trim() : '';
             const fYearVal = hFatherYear ? hFatherYear.value.trim() : '';
-
             const fCountryVal = hFatherCountry ? hFatherCountry.value.trim().toUpperCase() : '';
             
             if (fNameVal && fYearVal && fCountryVal) {
@@ -143,7 +138,6 @@ export function initHorses(){
                 };
             }
 
-            // Obsługa opcjonalnej matki
             const mNameVal = hMotherName ? hMotherName.value.trim() : '';
             const mYearVal = hMotherYear ? hMotherYear.value.trim() : '';
             const mCountryVal = hMotherCountry ? hMotherCountry.value.trim().toUpperCase() : '';
@@ -158,7 +152,7 @@ export function initHorses(){
 
             const response = await fetch('/api/horses/add', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: getAuthHeaders(),
                 body: JSON.stringify(newHorse)
             });
 
@@ -167,7 +161,6 @@ export function initHorses(){
             
             console.log("Sukces:", result);
             alert("Dodano konia pomyślnie!");
-            
             
             hName.value = '';
             hBirthYear.value = '';
@@ -201,19 +194,30 @@ export function initHorses(){
                 const countryVal = hCountry.value.trim(); 
                 const yearVal = hBirthYear.value.trim();
 
-                if (!nameVal || !countryVal || !yearVal) {
+                if (!nameVal && !countryVal && !yearVal) {
                     alert("Wypełnij imię, kod kraju i rok urodzenia, aby wyszukać konia!");
                     return;
                 }
 
-                const response = await fetch(`/api/horses/${encodeURIComponent(nameVal)}/${encodeURIComponent(countryVal)}/${encodeURIComponent(yearVal)}`);
+                const params = new URLSearchParams({
+                    name: nameVal,
+                    country: countryVal,
+                    birthYear: yearVal
+                });
+
+                const response = await fetch(`/api/horses/search?${params.toString()}`,{
+                    method: 'GET',
+                    headers: getAuthHeaders()
+                });
+
                 const result = await response.json();
 
                 if (!response.ok) {
                     throw new Error(result.error || "Coś poszło nie tak podczas wyszukiwania!");
                 }
                 
-                alert(`Znaleziono konia: ${result.name} (${result.color} ${result.gender}), Rok: ${result.birthYear}`);
+                const foundHorse = Array.isArray(result) ? result[0] : result;
+                alert(`Znaleziono konia: ${foundHorse.name} (${foundHorse.color} ${foundHorse.gender}), Rok: ${foundHorse.birthYear}`);
 
             } catch (error) {
                 alert(error.message);
@@ -235,9 +239,15 @@ export function initHorses(){
                     return;
                 }
 
-                const response = await fetch(`/api/horses/${encodeURIComponent(nameVal)}/${encodeURIComponent(countryVal)}/${encodeURIComponent(yearVal)}`, {
+                const params = new URLSearchParams({
+                    name: nameVal,
+                    country: countryVal,
+                    birthYear: yearVal
+                });
+
+                const response = await fetch(`/api/horses/search?${params.toString()}`, {
                     method: 'DELETE',
-                    headers: { 'Content-Type': 'application/json' }
+                    headers: getAuthHeaders()
                 });
 
                 const result = await response.json();
@@ -264,11 +274,9 @@ export function initHorses(){
     const hNewColor = document.getElementById('hNewColor');
     const hNewNotes = document.getElementById('hNewNotes');
     
-    // Pola edycji - Hodowca
     const hNewBreederName = document.getElementById('hNewBreederName');
     const hNewBreederCountry = document.getElementById('hNewBreederCountry');
     
-    // Pola edycji - Rodzice
     const hNewFatherName = document.getElementById('hNewFatherName');
     const hNewFatherYear = document.getElementById('hNewFatherYear');
     const hNewFatherCountry = document.getElementById('hNewFatherCountry');
@@ -297,7 +305,6 @@ export function initHorses(){
             if (hNewColor && hNewColor.value.trim()) updatedData.color = hNewColor.value.trim();
             if (hNewNotes && hNewNotes.value.trim()) updatedData.notes = hNewNotes.value.trim();
 
-            // Hodowca
             const nBreederName = hNewBreederName ? hNewBreederName.value.trim() : '';
             const nBreederCountry = hNewBreederCountry ? hNewBreederCountry.value.trim().toUpperCase() : '';
             if (nBreederName || nBreederCountry) {
@@ -305,7 +312,6 @@ export function initHorses(){
                 updatedData.breederCountryCode = nBreederCountry;
             }
 
-            // Ojciec
             const nFatherName = hNewFatherName ? hNewFatherName.value.trim() : '';
             const nFatherYear = hNewFatherYear ? hNewFatherYear.value.trim() : '';
             const nFatherCountry = hNewFatherCountry ? hNewFatherCountry.value.trim().toUpperCase() : '';
@@ -316,7 +322,6 @@ export function initHorses(){
                 if (nFatherCountry) updatedData.father.countryCode = nFatherCountry;
             }
 
-            // Matka
             const nMotherName = hNewMotherName ? hNewMotherName.value.trim() : '';
             const nMotherYear = hNewMotherYear ? hNewMotherYear.value.trim() : '';
             const nMotherCountry = hNewMotherCountry ? hNewMotherCountry.value.trim().toUpperCase() : '';
@@ -327,15 +332,20 @@ export function initHorses(){
                 if (nMotherCountry) updatedData.mother.countryCode = nMotherCountry;
             }
 
-            //czy użytkownik wpisał jakiekolwiek nowe dane
             if (Object.keys(updatedData).length === 0) {
                 alert("Wypełnij przynajmniej jedno nowe pole edycji, aby dokonać zmian!");
                 return;
             }
 
-            const response = await fetch(`/api/horses/${encodeURIComponent(currentName)}/${encodeURIComponent(currentCountry)}/${encodeURIComponent(currentYear)}`, {
+            const params = new URLSearchParams({
+                name: currentName,
+                country: currentCountry,
+                birthYear: currentYear
+            });
+
+            const response = await fetch(`/api/horses/search?${params.toString()}`, {
                 method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
+                headers: getAuthHeaders(),
                 body: JSON.stringify(updatedData)
             });
 
@@ -372,11 +382,9 @@ export function initHorses(){
     const horseLineageResult = document.getElementById('horseLineageResult');
     const lDepth = document.getElementById('lDepth');
 
-    // Funkcja generująca graficzne drzewo z obiektu (zamienia JSON na tekstowy wykres)
     function renderTree(horse, prefix = "", isLast = true, isRoot = true) {
         if (!horse) return "";
 
-        // Próba odczytania kraju (może być stringiem lub obiektem w zależności od API)
         const countryCode = horse.countryCode || (horse.country && horse.country.code) || '?';
         const horseInfo = `${horse.name} (${horse.birthYear || '?'}, ${countryCode})`;
         let result = "";
@@ -387,10 +395,8 @@ export function initHorses(){
             result += `${prefix}${isLast ? "└── " : "├── "}🐴 ${horseInfo}\n`;
         }
 
-        // Kalkulacja wcięcia dla kolejnego pokolenia
         const newPrefix = isRoot ? "" : prefix + (isLast ? "    " : "│   ");
         
-        // Zbieranie rodziców do tablicy, żeby ustalić, który element jest ostatnim węzłem
         const parents = [];
         if (horse.father) parents.push(horse.father);
         if (horse.mother) parents.push(horse.mother);
@@ -408,20 +414,22 @@ export function initHorses(){
             const nameVal = hName.value.trim();
             const countryVal = hCountry.value.trim();
             const yearVal = hBirthYear.value.trim();
-            const depthVal = lDepth.value.trim() || 3;
+            const depthVal = lDepth ? lDepth.value.trim() : 3;
             if (!nameVal || !countryVal || !yearVal) {
                 alert("Wypełnij imię, kod kraju i rok urodzenia w głównych polach, aby wygenerować drzewo!");
                 return;
             }
 
-            const response = await fetch(`/api/horses/lineAge/${encodeURIComponent(nameVal)}/${encodeURIComponent(countryVal)}/${encodeURIComponent(yearVal)}?depth=${depthVal}`);
+            const response = await fetch(`/api/horses/lineAge/${encodeURIComponent(nameVal)}/${encodeURIComponent(countryVal)}/${encodeURIComponent(yearVal)}?depth=${depthVal}`,{
+                moethod: 'GET',
+                headers: getAuthHeaders()
+            });
             const result = await response.json();
 
             if (!response.ok) {
                 throw new Error(result.error || "Coś poszło nie tak podczas pobierania rodowodu!");
             }
 
-            // CZY TO ZMIENIAC?
             horseLineageResult.style.display = 'block';
             horseLineageResult.innerHTML = renderTree(result);
 

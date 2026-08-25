@@ -1,8 +1,10 @@
 const express = require('express');
 const router = express.Router();
 const Country = require('../../models/Country');
+const verifyToken = require('../../middleware/tokenAuth');
+const checkRole = require('../../middleware/checkRole');
 
-router.post('/add', async (req, res) => {
+router.post('/add', verifyToken,checkRole('admin'), async (req, res) => {
     try {
         const { name, code } = req.body;
 
@@ -28,7 +30,7 @@ router.post('/add', async (req, res) => {
     }
 });
 
-router.get('/all', async (req, res) => {
+router.get('/all', verifyToken,checkRole('admin'), async (req, res) => {
     try {
         const countries = await Country.find();
         res.status(200).json(countries);
@@ -39,7 +41,7 @@ router.get('/all', async (req, res) => {
 
 router.route('/:value')
 
-    .get(async (req, res) => {
+    .get(verifyToken,checkRole('admin'), async (req, res) => {
         try {
             const { value } = req.params;
 
@@ -59,7 +61,7 @@ router.route('/:value')
         }
     })
 
-    .delete(async (req, res) => {
+    .delete(verifyToken,checkRole('admin'), async (req, res) => {
         try {
             const { value } = req.params;
 
@@ -82,7 +84,7 @@ router.route('/:value')
         }
     })
 
-    .patch(async (req, res) => {
+    .patch(verifyToken,checkRole('admin'), async (req, res) => {
         try {
             const { value } = req.params; 
             const { name, code } = req.body;
